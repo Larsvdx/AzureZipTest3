@@ -59,7 +59,7 @@ typings/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+../../.env
 .env.test
 
 # parcel-bundler cache (https://parceljs.org/)
@@ -84,7 +84,7 @@ typings/
 .dynamodb/
 
 # TypeScript output
-dist
+../../dist
 out
 
 # Azure Functions artifacts
