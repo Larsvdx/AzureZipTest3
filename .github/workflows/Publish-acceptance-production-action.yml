@@ -3,7 +3,7 @@ name: Deploy Node.js project to Azure Function App
 on: [workflow_dispatch]
 
 env:
-  AZURE_FUNCTIONAPP_NAME: 'func-rav-tst-emea-dp001'
+  AZURE_FUNCTIONAPP_NAME: 'ZipDeployFunc'
   AZURE_FUNCTIONAPP_PACKAGE_PATH: 'azure-function/azure'
   NODE_VERSION: '18.x'
 
