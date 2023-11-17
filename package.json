@@ -1,0 +1,34 @@
+{
+  "name": "cf-td-datasync",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "ts-node node_modules/jasmine/bin/jasmine --config=./jasmine.json",
+    "export:teamdesk": "tsc teamdesk/scripts/export.ts && node teamdesk/scripts/export.js -bc 'UP' -c teamdesk/config/teamdesk.api.config.json -a D6C37959547F4F4ABB12A25D4BF09C9A -sd sync/exports",
+    "import:contentful": "tsc contentful/scripts/import.ts && node contentful/scripts/import.js -s u962r8i34sue -e master -a CFPAT-T1E7b1rmlbvJmEvn64ECOWtTOx-iTDI5Y4DSxsrFqaQ",
+    "archive:contentful": "tsc contentful/scripts/archive.ts && node contentful/scripts/archive.js -s u962r8i34sue -e master -a CFPAT-T1E7b1rmlbvJmEvn64ECOWtTOx-iTDI5Y4DSxsrFqaQ"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@babel/preset-env": "^7.19.4",
+    "@babel/preset-typescript": "^7.18.6",
+    "@types/node-fetch": "^2.6.4",
+    "contentful": "^9.2.5",
+    "contentful-cli": "^1.15.25",
+    "jasmine": "^4.6.0",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@types/jasmine": "^4.3.1",
+    "commander": "^9.4.1",
+    "fast-deep-equal": "^3.1.3",
+    "fetch": "^1.1.0",
+    "fs-extra": "^10.1.0",
+    "node-fetch": "2.6.7",
+    "ts-node": "^10.9.1",
+    "file-type": "^16.5.4"
+  }
+}
