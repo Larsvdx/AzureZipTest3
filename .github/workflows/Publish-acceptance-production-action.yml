@@ -3,7 +3,7 @@ name: Deploy Node.js project to Azure Function App
 on: [workflow_dispatch]
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'azure-function/azure'
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.'
   NODE_VERSION: '18.x'
 
 jobs:
