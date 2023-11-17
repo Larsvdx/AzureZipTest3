@@ -1,4 +1,0 @@
-{
-  "spec_dir": "./contentful",
-  "spec_files": ["**/*[sS]pec.ts"]
-}
