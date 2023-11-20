@@ -1,6 +1,6 @@
-import {createClient} from "contentful-management";
-import {DelayedQueue} from "../../util/delayed.queue.util";
-import {OptionValues} from "commander";
+import { createClient } from "contentful-management";
+import { DelayedQueue } from "../../util/delayed.queue.util";
+import { OptionValues } from "commander";
 
 const fetchImage = require("node-fetch");
 
@@ -18,13 +18,12 @@ export async function importCaseStudyImages(
     accessToken: options.apiKey,
   });
 
-  await delayedQueue.dequeue(async (caseStudy: any) => {
+  delayedQueue.dequeue(async (caseStudy: any) => {
     processCaseStudies(options, caseStudy);
   });
-  return true
 }
 
-async function processCaseStudies(options: OptionValues, caseStudy: any) {
+function processCaseStudies(options: OptionValues, caseStudy: any) {
   const queueData = [];
 
   for (let index = 1; index <= numberOfCaseStudyImages; index++) {
@@ -34,7 +33,7 @@ async function processCaseStudies(options: OptionValues, caseStudy: any) {
   if (queueData.length > 1) {
     const delayedQueue = new DelayedQueue(queueData, queueInterval);
 
-    await delayedQueue.dequeue(async (item: any) => {
+    delayedQueue.dequeue(async (item: any) => {
       processCaseStudyByImageId(options, item.caseStudy, item.imageNumber);
     });
   }
@@ -147,19 +146,19 @@ function updateCaseStudyEntry(
       if (entries.items.length > 0) {
         const entry = entries.items[0];
         if (entry) {
-            entry.fields = Object.assign({}, entry.fields, {
-              images: {
-                  en: [
-                      ...(imageNumber > 1 ? entry.fields.images?.en ?? [] : []),
-                      {
-                          sys: {
-                              type: "Link",
-                              linkType: "Asset",
-                              id: asset.sys.id,
-                          },
-                      },
-                  ],
-              },
+          entry.fields = Object.assign({}, entry.fields, {
+            images: {
+              en: [
+                ...(imageNumber > 1 ? entry.fields.images?.en ?? [] : []),
+                {
+                  sys: {
+                    type: "Link",
+                    linkType: "Asset",
+                    id: asset.sys.id,
+                  },
+                },
+              ],
+            },
           });
           if (!entry.isArchived()) {
             try {

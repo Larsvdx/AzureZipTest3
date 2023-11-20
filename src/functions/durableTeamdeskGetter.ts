@@ -20,6 +20,7 @@ import { endPoints } from "../../teamdesk/configurations/endpoints.config";
 import { formatData } from "../../shared/functions/data-formatter";
 import { logData } from "../../shared/functions/data-logger";
 import { importContent } from "../../contentful/scripts/import";
+import { importCaseStudyImages } from "../../contentful/scripts/import-case-study-images";
 require("dotenv").config();
 
 const blobInput = input.storageBlob({
@@ -39,7 +40,7 @@ const contentfulOptions: OptionValues = {
 };
 
 const durableTeamdeskGetterOrchestrator: OrchestrationHandler = function* (
-  context: OrchestrationContext,
+  context: OrchestrationContext
 ) {
   const initialInput = context.df.getInput() as {
     blobInput: KeyValuePair[];
@@ -67,14 +68,17 @@ const durableTeamdeskGetterOrchestrator: OrchestrationHandler = function* (
   // Archive deleted data in contentful
   yield context.df.callActivity("durableContentfullArchive", teamDeskData);
 
-  // add or update new data in contentful
+  // Add or update new data in contentful
   yield context.df.callActivity("durableContentfullUploadNew", teamDeskData);
+
+  // Add case study pictures in contentful
+  yield context.df.callActivity("durableImportCaseStudyImages", teamDeskData);
 
   return formattedOutput;
 };
 df.app.orchestration(
   "durableTeamdeskGetterOrchestrator",
-  durableTeamdeskGetterOrchestrator,
+  durableTeamdeskGetterOrchestrator
 );
 
 const durableTeamdeskGetter: ActivityHandler = async (input: {
@@ -95,7 +99,7 @@ const durableTeamdeskGetter: ActivityHandler = async (input: {
 df.app.activity("durableTeamdeskGetter", { handler: durableTeamdeskGetter });
 
 const durableContentfullUploadNew: ActivityHandler = async (
-  input: { endpoint: string; diff: DifferenceInterface; teamDeskData: any[] }[],
+  input: { endpoint: string; diff: DifferenceInterface; teamDeskData: any[] }[]
 ) => {
   return await importContent(contentfulOptions, input);
 };
@@ -104,7 +108,7 @@ df.app.activity("durableContentfullUploadNew", {
 });
 
 const durableContentfullArchive: ActivityHandler = async (
-  input: { endpoint: string; diff: DifferenceInterface; teamDeskData: any[] }[],
+  input: { endpoint: string; diff: DifferenceInterface; teamDeskData: any[] }[]
 ) => {
   return await archiveContent(contentfulOptions, input);
 };
@@ -112,8 +116,23 @@ df.app.activity("durableContentfullArchive", {
   handler: durableContentfullArchive,
 });
 
+const durableImportCaseStudyImages: ActivityHandler = async (
+  input: { endpoint: string; diff: DifferenceInterface; teamDeskData: any[] }[]
+) => {
+  const caseStudies = input.find((data) => data.endpoint === "caseStudy");
+  if (caseStudies.diff?.newJson) {
+    return await importCaseStudyImages(
+      contentfulOptions,
+      caseStudies.diff.newJson
+    );
+  }
+};
+df.app.activity("durableImportCaseStudyImages", {
+  handler: durableImportCaseStudyImages,
+});
+
 const durableEntityBlobOutput: EntityHandler<KeyValuePair[]> = (
-  context: EntityContext<KeyValuePair[]>,
+  context: EntityContext<KeyValuePair[]>
 ) => {
   context.log("ENTERING DURABLE ENTITY");
   const currentValue = context.df.getState(() => []);
@@ -131,7 +150,7 @@ df.app.entity("durableEntityBlobOutput", { handler: durableEntityBlobOutput });
 
 export async function timerTrigger(
   myTimer: Timer,
-  context: InvocationContext,
+  context: InvocationContext
 ): Promise<void> {
   const entityId = new df.EntityId("durableEntityBlobOutput", "syncBlobOutput");
   const client = df.getClient(context);
@@ -142,7 +161,7 @@ export async function timerTrigger(
         blobInput: context.extraInputs.get(blobInput),
         entityId: entityId,
       },
-    },
+    }
   );
   context.log(`Started orchestration with ID = '${instanceId}'.`);
 

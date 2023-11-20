@@ -16,7 +16,7 @@ export class ExportService {
     do {
       resultSet = [];
       resultSet = (await this.teamDeskHttpDataService.getTeamDeskData(
-        url.replace("{{skip}}", skip.toString()),
+        url.replace("{{skip}}", skip.toString())
       )) as [];
       result = [...result, ...resultSet];
       skip = skip + 500;
@@ -32,7 +32,7 @@ export class ExportService {
       diff = this.exportToDiffJson(result, oldData);
     }
 
-    return { teamDeskData:result, diff };
+    return { teamDeskData: result, diff };
   }
 
   generateUrl(host: string, endpoint: string, businessContext: string): string {
@@ -41,23 +41,44 @@ export class ExportService {
 
   private exportToDiffJson(
     newExportJson: any[],
-    oldExportJson: any[],
+    oldExportJson: any[]
   ): DifferenceInterface {
     let newAndUpdated = this.getNewAndUpdated(newExportJson, oldExportJson);
     const deletedAndUpdated = this.getDeletedAndUpdated(
       oldExportJson,
-      newExportJson,
+      newExportJson
     );
     const deleted = this.getDeleted(deletedAndUpdated, newAndUpdated);
+    const newEntries = this.getNew(deletedAndUpdated, newAndUpdated);
+    const updatedOldExportJson = oldExportJson;
 
     // ignore shifted data when a data point in the middle of the table is deleted
-    if(deleted && deleted.length>0){
-      const updatedOldExportJson = oldExportJson
-      deleted.forEach((deletedItem: any)=> {
-        const index = updatedOldExportJson.map((json: any)=>json['@row.id']).findIndex((id)=>id===deletedItem['@row.id'])
-        if(index!==-1) updatedOldExportJson.splice(index,1)
-      })
-      newAndUpdated = this.getNewAndUpdated(newExportJson, updatedOldExportJson);
+    if (deleted && deleted.length > 0) {
+      deleted.forEach((deletedItem: any) => {
+        const index = updatedOldExportJson
+          .map((json: any) => json["@row.id"])
+          .findIndex((id) => id === deletedItem["@row.id"]);
+        if (index !== -1) updatedOldExportJson.splice(index, 1);
+      });
+      newAndUpdated = this.getNewAndUpdated(
+        newExportJson,
+        updatedOldExportJson
+      );
+    }
+
+    // ignore shifted data when a data point is added in the middle of the table
+    if (newEntries && newEntries.length > 0) {
+      const updatedNewExportJson = newExportJson;
+      newEntries.forEach((newItem: any) => {
+        const index = updatedNewExportJson
+          .map((json: any) => json["@row.id"])
+          .findIndex((id) => id === newItem["@row.id"]);
+        if (index !== -1) updatedNewExportJson.splice(index, 1);
+      });
+      newAndUpdated = [
+        ...this.getNewAndUpdated(updatedNewExportJson, updatedOldExportJson),
+        ...newEntries,
+      ];
     }
 
     return { deletedJson: deleted, newJson: newAndUpdated };
@@ -67,8 +88,18 @@ export class ExportService {
     return deletedAndUpdated
       .filter(
         (x) =>
-          newAndUpdated.findIndex((y: any) => y["@row.id"] === x["@row.id"]) <
-          0,
+          newAndUpdated.findIndex((y: any) => y["@row.id"] === x["@row.id"]) < 0
+      )
+      .sort((x, y) => (x["@row.id"] < y["@row.id"] ? -1 : 1));
+  }
+
+  private getNew(deletedAndUpdated: any[], newAndUpdated: any[]) {
+    return newAndUpdated
+      .filter(
+        (x) =>
+          deletedAndUpdated.findIndex(
+            (y: any) => y["@row.id"] === x["@row.id"]
+          ) < 0
       )
       .sort((x, y) => (x["@row.id"] < y["@row.id"] ? -1 : 1));
   }
@@ -77,12 +108,12 @@ export class ExportService {
     return difference(
       oldExportJson.sort(
         (x: { [x: string]: number }, y: { [x: string]: number }) =>
-          x["@row.id"] < y["@row.id"] ? -1 : 1,
+          x["@row.id"] < y["@row.id"] ? -1 : 1
       ),
       newExportJson.sort(
         (x: { [x: string]: number }, y: { [x: string]: number }) =>
-          x["@row.id"] < y["@row.id"] ? -1 : 1,
-      ),
+          x["@row.id"] < y["@row.id"] ? -1 : 1
+      )
     );
   }
 
@@ -90,12 +121,12 @@ export class ExportService {
     return difference(
       newExportJson.sort(
         (x: { [x: string]: number }, y: { [x: string]: number }) =>
-          x["@row.id"] < y["@row.id"] ? -1 : 1,
+          x["@row.id"] < y["@row.id"] ? -1 : 1
       ),
       oldExportJson.sort(
         (x: { [x: string]: number }, y: { [x: string]: number }) =>
-          x["@row.id"] < y["@row.id"] ? -1 : 1,
-      ),
+          x["@row.id"] < y["@row.id"] ? -1 : 1
+      )
     );
   }
 }
